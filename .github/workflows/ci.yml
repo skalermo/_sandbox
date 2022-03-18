@@ -18,11 +18,13 @@ jobs:
         python-version: '3.x'
 
     - uses: actions/cache@v2
+      id: myCacheStep
       with:
         path: .cache/pip
         key: pip-${{ hashFiles('**/requirements.txt') }}
 
     - name: Install dependencies
+      if: steps.myCacheStep.outputs.cache-hit != 'true'
       run: |
         pip install -r requirements.txt
 
