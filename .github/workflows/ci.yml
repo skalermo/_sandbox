@@ -1,4 +1,4 @@
-name: CI
+name: Build
 on: [pull_request, push]
 
 jobs:
@@ -22,6 +22,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          poetry --version
           pip install -r requirements.txt
 
       - name: Run tests
