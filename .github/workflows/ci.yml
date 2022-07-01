@@ -76,3 +76,17 @@ jobs:
           asset_path: ./main.bin
           asset_name: app-${{ github.ref }}-${{ runner.os }}
           asset_content_type: application/octet-stream
+
+      - name: Draft release
+        uses: ncipollo/release-action@v1
+        with:
+          body:
+            See
+            [CHANGELOG](https://github.com/dynobo/normcap/blob/main/CHANGELOG.md)
+            for details.
+          artifacts: "*/*.+(dmg|AppImage|msi)"
+          artifactErrorsFailBuild: false
+          allowUpdates: true
+          draft: true
+          prerelease: ${{ steps.extract_version.outputs.PRE_RELEASE != ''}}
+          token: ${{ secrets.GITHUB_TOKEN }}
