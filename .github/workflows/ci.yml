@@ -1,33 +1,80 @@
-name: CI
-
-on:
-  pull_request:
-  push:
-    branches:
-      - main
+name: Build
+on: [pull_request, push]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/main'
+      || startsWith(github.ref, 'refs/tags/v')
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
 
-    - uses: actions/cache@v2
-      id: myCacheStep
-      with:
-        path: .cache/pip
-        key: pip-${{ hashFiles('**/requirements.txt') }}
+      - uses: actions/cache@v2
+        id: myCacheStep
+        with:
+          path: .cache/pip
+          key: pip-${{ hashFiles('**/requirements.txt') }}
 
-    - name: Install dependencies
-      if: steps.myCacheStep.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements.txt
+      - name: Install dependencies
+        if: steps.myCacheStep.outputs.cache-hit != 'true'
+        run: |
+          pip install -r requirements.txt
 
-    - name: Run tests
-      run: |
-        python3 -m unittest discover test
+      - name: Run tests
+        run: |
+          python3 -m unittest discover test
+
+  build:
+    name: Upload Release Asset
+    needs: test
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, macos-10.15, windows-2019]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-dev.txt
+
+      - name: Build project
+        run: |
+          python3 -m nuitka main.py
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
+          allowUpdates: true
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./main.bin
+          asset_name: app-${{ github.ref }}-${{ runner.os }}
+          asset_content_type: application/octet-stream
