@@ -31,7 +31,7 @@ if __name__ == '__main__':
         '--onefile',
         '--follow-imports',
         f'--output-filename={app_name}',
-        '--disable-console',
         f'--assume-yes-for-downloads',
+        '--static-libpython=yes',
         str(entry_point),
     ])
