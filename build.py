@@ -29,6 +29,7 @@ if __name__ == '__main__':
     subprocess.run([
         'python', '-m', 'nuitka',
         '--onefile',
+        '--follow-imports',
         f'--output-filename={app_name}',
         '--disable-console',
         f'--assume-yes-for-downloads',
