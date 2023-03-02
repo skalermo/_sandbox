@@ -1,7 +1,9 @@
 from pathlib import Path
 import platform
+import subprocess
 
-import PyInstaller.__main__
+# import PyInstaller.__main__
+import nuitka.__main__
 
 
 if __name__ == '__main__':
@@ -16,11 +18,19 @@ if __name__ == '__main__':
     }.get(platform.system(), 'bin')
     app_name = f'app-{version}.{extension}'
 
-    PyInstaller.__main__.run([
-        str(entry_point),
-        f'--name={app_name}',
-        '--noconfirm',
-        '--log-level=WARN',
+    # PyInstaller.__main__.run([
+    #     str(entry_point),
+    #     f'--name={app_name}',
+    #     '--noconfirm',
+    #     '--log-level=WARN',
+    #     '--onefile',
+    #     '--noconsole',
+    # ])
+    subprocess.run([
+        'python', '-m', 'nuitka',
         '--onefile',
-        '--noconsole',
+        f'--output-filename={app_name}',
+        '--disable-console',
+        f'--assume-yes-for-downloads',
+        str(entry_point),
     ])
